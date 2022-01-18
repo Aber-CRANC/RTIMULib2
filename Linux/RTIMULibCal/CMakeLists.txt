@@ -26,6 +26,8 @@
 #
 # Copyright 2014 Ettus Research LLC
 #
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.9)
+project(RTIMULibCal)
 
 
 SET(CAL_SRCS

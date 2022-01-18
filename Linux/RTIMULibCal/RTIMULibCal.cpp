@@ -263,7 +263,8 @@ void processEllipsoid()
 {
     printf("\n\nProcessing ellipsoid fit data...\n");
 
-    fit_ellipsoid(RTIMUCALDEFS_MAG_RAW_FILE, RTIMUCALDEFS_MAG_CORR_FILE, 1000);
+    //  Multiply minimum octant sample count by 9 instead of 8 to add a margin for extra points.
+    fit_ellipsoid(RTIMUCALDEFS_MAG_RAW_FILE, RTIMUCALDEFS_MAG_CORR_FILE);
 
     magCal->magCalSaveCorr(ELLIPSOID_FIT_DIR);
 }

@@ -13,41 +13,57 @@
 using namespace std;
 using namespace Eigen;
 
-int fit_ellipsoid(const char * filename_in, const char * filename_out, int mag_data_counter)
+int fit_ellipsoid(const char * filename_in, const char * filename_out)
 {
 	FILE * fp;
 	double mag_x, mag_y, mag_z;
+	long line_count = 0;
+	long index = 0;
 
-	MatrixXd mat_D(mag_data_counter, 9);
+	MatrixXd mat_D;
 	MatrixXd mat_DT;
 
 	fp = fopen(filename_in, "r");
 
 	if (fp == NULL)
 	{
-		("Error opening %s\n.", filename_in);
+		printf("Error opening %s.\n", filename_in);
 		exit(1);
 	}
 
-	for (int i = 0; i < mag_data_counter; i++)
+	//  check how many lines (data points) are in the file
+	while(!feof(fp))
 	{
-		fscanf(fp, "%lf %lf %lf\n", &mag_x, &mag_y, &mag_z);
-		mat_D(i, 0) = mag_x * mag_x;
-		mat_D(i, 1) = mag_y * mag_y;
-		mat_D(i, 2) = mag_z * mag_z;
-		mat_D(i, 3) = 2 * mag_x * mag_y;
-		mat_D(i, 4) = 2 * mag_x * mag_z;
-		mat_D(i, 5) = 2 * mag_y * mag_z;
-		mat_D(i, 6) = 2 * mag_x;
-		mat_D(i, 7) = 2 * mag_y;
-		mat_D(i, 8) = 2 * mag_z;
+		if(fgetc(fp) == '\n')
+		{
+			line_count++;
+		}
+	}
+
+	mat_D = MatrixXd(line_count, 9);
+
+	//  start reading the data points from the top of the file
+	rewind(fp);
+
+	while (fscanf(fp, "%lf %lf %lf\n", &mag_x, &mag_y, &mag_z) == 3) {
+		mat_D(index, 0) = mag_x * mag_x;
+		mat_D(index, 1) = mag_y * mag_y;
+		mat_D(index, 2) = mag_z * mag_z;
+		mat_D(index, 3) = 2 * mag_x * mag_y;
+		mat_D(index, 4) = 2 * mag_x * mag_z;
+		mat_D(index, 5) = 2 * mag_y * mag_z;
+		mat_D(index, 6) = 2 * mag_x;
+		mat_D(index, 7) = 2 * mag_y;
+		mat_D(index, 8) = 2 * mag_z;
+
+		index++;
 	}
 
 	fclose(fp);
 
 	mat_DT = mat_D.transpose();
 
-	MatrixXd mat_Ones = MatrixXd::Ones(mag_data_counter, 1);
+	MatrixXd mat_Ones = MatrixXd::Ones(index, 1);
 
 	MatrixXd mat_Result =  (mat_DT * mat_D).inverse() * (mat_DT * mat_Ones);
 
@@ -107,10 +123,11 @@ int fit_ellipsoid(const char * filename_in, const char * filename_out, int mag_d
 	mat_Scale = mat_Scale.inverse().array() * min_Radii;
 	MatrixXd mat_Correct = mat_Evecs * mat_Scale * mat_Evecs.transpose();
 
-	cout << "The Ellipsoid center is:" << endl << mat_Center << endl;
-	cout << "The Ellipsoid radii is:" << endl << mat_Radii << endl;
-	cout << "The scale matrix  is:" << endl << mat_Scale << endl;
-	cout << "The correct matrix  is:" << endl << mat_Correct << endl;
+	cout << "Ellipsoid fit done using " << index << " points out " << line_count << " data points (lines) in the file" << endl;
+	cout << "The Ellipsoid center is:" << '\n' << mat_Center << endl;
+	cout << "The Ellipsoid radii is:" << '\n' << mat_Radii << endl;
+	cout << "The scale matrix  is:" << '\n' << mat_Scale << endl;
+	cout << "The correct matrix  is:" << '\n' << mat_Correct << endl;
 
 	FILE *correction_file = fopen(filename_out, "w");
 	if (correction_file == NULL)
@@ -132,14 +149,14 @@ int fit_ellipsoid(const char * filename_in, const char * filename_out, int mag_d
 
 int main(int argc, char **argv)
 {
-	if (argc < 2)
+	if (argc < 3)
 	{
 		printf("Too few arguments. Usage:\n");
 		printf("ellipsoid_fit [input_file] [output_file]\n");
 		return 1;
 	}
 
-	if (!fit_ellipsoid(argv[0], argv[1], 1000)) {
+	if (!fit_ellipsoid(argv[1], argv[2])) {
 		return 1;
 	}
 

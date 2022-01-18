@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
-project(eillipose_fit)
+project(ellipsoid_fit)
 
 find_package (Eigen3 3.3 REQUIRED NO_MOUDLE)
 

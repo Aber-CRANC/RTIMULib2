@@ -112,6 +112,12 @@ void RTIMUMagCal::newEllipsoidData(const RTVector3& data)
     for (int i = 0; i < 3; i++)
         calData.setData(i, (data.data(i) - m_minMaxOffset.data(i)) * m_minMaxScale.data(i));
 
+    //  see if there's already enough data points in octant
+
+    if (m_octantCounts[findOctant(calData)] >= RTIMUCALDEFS_OCTANT_MIN_SAMPLES) {
+        return;
+    }
+
     //  now see if it's already there - we want them all unique and slightly separate (using a fuzzy compare)
 
     for (int index = m_magCalOutIndex, i = 0; i < m_magCalCount; i++) {
